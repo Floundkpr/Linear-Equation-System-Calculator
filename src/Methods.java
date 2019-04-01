@@ -1,82 +1,153 @@
+import java.io.FileReader;
 import java.util.Scanner;
 
 class Methods {
     private static Scanner scanner = new Scanner(System.in);
 
     static StringBuilder SeidelMethod() {
-        StringBuilder protocol = new StringBuilder();
 
-        System.out.println("Введите количество неизвестных");
-        int n = scanner.nextInt();
-        protocol.append("Количество неизвестных = ").append(n).append("\n");
+            StringBuilder protocol = new StringBuilder();
 
-        System.out.println("Введите точность");
-        double eps = scanner.nextDouble();
-        protocol.append("Точность = ").append(eps).append("\n");
+            try {
 
-        double[][] A = new double[n][n];
-        double[] b = new double[n];
-        double[] xNew = new double[n];
-        double[] xOld = new double[n];
+                int n;
+                double eps;
+                double[] b;
+                double[][] A;
 
 
+                boolean f;
+                do {
+                    System.out.println("Выберите действие: \n1.Ввести вручную\n2.Считать с файла\n0.Выход");
+                    switch (scanner.nextInt()) {
+                        case 1:
+                            f = false;
+                            protocol.append("Пользователь выбрал ввод вручную.").append('\n');
+                            System.out.println("Введите количество неизвестных");
+                            n = scanner.nextInt();
+                            protocol.append("Количество неизвестных = ").append(n).append("\n");
 
-        System.out.println("Введите матрицу А");
-        for (int i = 0; i < n; i++) {
-            for (int j = 0; j < n; j++) {
-                A[i][j] = scanner.nextDouble();
-            }
-        }
+                            System.out.println("Введите точность");
+                            eps = scanner.nextDouble();
+                            protocol.append("Точность = ").append(eps).append("\n");
 
-        protocol.append("Введена матрица А").append("\n");
+                            A = new double[n][n];
+                            b = new double[n];
 
-        System.out.println("Введите матрица свободных членов");
-        for (int i = 0; i < n; i++) {
-            b[i] = scanner.nextDouble();
-        }
 
-        protocol.append("Введена матрица свободных членов").append("\n");
+                            System.out.println("Введите матрицу А");
+                            for (int i = 0; i < n; i++) {
+                                for (int j = 0; j < n; j++) {
+                                    A[i][j] = scanner.nextDouble();
+                                }
+                            }
 
-        for (int i = 0; i < n; i++) {
-            for (int j = 0; j < n; j++) {
-                if (Math.abs(A[i][i]) < Math.abs(A[i][j])){
-                    System.out.println("Система не сходима");
-                    protocol.append("Система не сходима, возвращение в меню").append("\n");
-                    return protocol;
+                            protocol.append("Введена матрица А").append("\n");
+
+                            System.out.println("Введите матрица свободных членов");
+                            for (int i = 0; i < n; i++) {
+                                b[i] = scanner.nextDouble();
+                            }
+
+                            protocol.append("Введена матрица свободных членов").append("\n");
+                            break;
+
+                        case 2:
+                            f = false;
+                            protocol.append("Пользователь выбрал считывание из файла.").append('\n');
+
+                            FileReader fr = new FileReader("./Data/Seidel.txt");
+                            Scanner scan = new Scanner(fr);
+
+                            String[] buf = scan.nextLine().split(" ");
+
+                            n = Integer.parseInt(buf[buf.length - 1]);
+                            protocol.append("Количество неизвестных = ").append(n).append("\n");
+
+                            A = new double[n][n];
+                            b = new double[n];
+
+                            scan.nextLine();
+
+                            for (int i = 0; i < n; i++) {
+                                buf = scan.nextLine().split(" ");
+                                for (int j = 0; j < n; j++) {
+                                    A[i][j] = Double.parseDouble(buf[j]);
+                                }
+                            }
+                            protocol.append("Считана матрица А").append("\n");
+
+                            scan.nextLine();
+
+                            buf = scan.nextLine().split(" ");
+                            for (int i = 0; i < n; i++) {
+                                b[i] = Double.parseDouble(buf[i]);
+                            }
+                            protocol.append("Считана матрица свободных членов").append("\n");
+
+                            buf = scan.nextLine().split(" ");
+                            eps = Double.parseDouble(buf[buf.length-1]);
+                            protocol.append("Точность = ").append(eps).append("\n");
+
+                            break;
+                        case 0:
+                            protocol.append("Пользователь закрыл программу.").append('\n');
+                            return protocol;
+                        default:
+                            n = 0;
+                            A = new double[0][0];
+                            b = new double[0];
+                            eps = 0;
+                            f = true;
+                    }
+                } while (f);
+
+                for (int i = 0; i < n; i++) {
+                    for (int j = 0; j < n; j++) {
+                        if (Math.abs(A[i][i]) < Math.abs(A[i][j])) {
+                            System.out.println("Система не сходима");
+                            protocol.append("Система не сходима, возвращение в меню").append("\n");
+                            return protocol;
+                        }
+                    }
                 }
-            }
-        }
 
-        do {
-            System.arraycopy(xNew, 0, xOld, 0, n);
+                double[] xNew = new double[n];
+                double[] xOld = new double[n];
 
-            for (int i = 0; i < n; i++) {
-                xNew[i] = 0;
-                for (int j = 0; j < n; j++) {
-                    if (i!=j) xNew[i] += A[i][j] * xNew[j];
+                do {
+                    System.arraycopy(xNew, 0, xOld, 0, n);
+
+                    for (int i = 0; i < n; i++) {
+                        xNew[i] = 0;
+                        for (int j = 0; j < n; j++) {
+                            if (i != j) xNew[i] += A[i][j] * xNew[j];
+                        }
+                        xNew[i] = (b[i] - xNew[i]) / A[i][i];
+                    }
+
+                    double maxDiff = -1;
+                    for (int i = 0; i < n; i++) {
+                        if (Math.abs(xNew[i] - xOld[i]) > maxDiff) maxDiff = Math.abs(xNew[i] - xOld[i]);
+                    }
+                    if (maxDiff < eps) break;
+
+                } while (true);
+
+                protocol.append("Система решена").append("\n");
+
+                for (int i = 0; i < n; i++) {
+                    System.out.printf("x[%d] = %.4f     ", i + 1, xNew[i]);
+                    protocol.append("x[").append(i + 1).append("] = ").append(xNew[i]).append("; ");
                 }
-                xNew[i] = (b[i] - xNew[i]) / A[i][i];
+                System.out.println();
+                System.out.println();
+
+            } catch (Exception e) {
+                System.out.println(e.getMessage());
             }
 
-            double maxDiff = -1;
-            for (int i = 0; i < n; i++) {
-                if(Math.abs(xNew[i] - xOld[i]) > maxDiff) maxDiff = Math.abs(xNew[i] - xOld[i]);
-            }
-            if (maxDiff < eps) break;
-
-        } while (true);
-
-        protocol.append("Система решена").append("\n");
-
-        for (int i = 0; i < n; i++) {
-            System.out.printf("x[%d] = %.4f     ", i + 1, xNew[i]);
-            protocol.append("x[").append(i + 1).append("] = ").append(xNew[i]).append("; ");
-        }
-        System.out.println();
-        System.out.println();
-
-
-        return protocol.append("\n");
+            return protocol.append("\n");
     }
 
     static StringBuilder ChordMethod() {
